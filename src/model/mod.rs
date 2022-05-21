@@ -1,3 +1,4 @@
+pub mod config;
 pub mod constraints;
 pub mod person;
 pub mod planning;

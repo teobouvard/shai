@@ -1,5 +1,8 @@
 use chrono::NaiveDate;
+use serde::Deserialize;
+use serde::Serialize;
 
+#[derive(Deserialize, Serialize)]
 pub struct Constraints {
     pub vacations: Vec<NaiveDate>,
 

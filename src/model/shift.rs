@@ -1,9 +1,12 @@
-use chrono::Duration;
+use std::time::Duration;
+
 use chrono::NaiveDate;
 use chrono::NaiveTime;
 use chrono::Weekday;
+use serde::Deserialize;
+use serde::Serialize;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Shift {
     pub name: String,
 
