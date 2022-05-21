@@ -2,4 +2,5 @@
 pub struct Person {
     pub name: String,
     pub surname: String,
+    pub email: String,
 }
