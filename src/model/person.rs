@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Eq, PartialEq, Hash, Debug, Deserialize, Serialize)]
+#[derive(Debug, Eq, PartialEq, Hash, Deserialize, Serialize)]
 pub struct Person {
     pub name: String,
     pub surname: String,

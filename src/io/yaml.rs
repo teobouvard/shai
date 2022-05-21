@@ -1,11 +1,11 @@
+use std::fs;
 use std::fs::File;
-use std::iter::Map;
 
 use anyhow::Result;
 
 use crate::io::reader::Reader;
 use crate::io::writer::Writer;
-use crate::model::constraints::Constraints;
+use crate::model::config::Config;
 use crate::model::person::Person;
 
 pub struct YamlReader;
@@ -16,8 +16,10 @@ impl Reader for YamlReader {
         todo!("{path}")
     }
 
-    fn read_constraints(members: &[Person]) -> Result<Map<Person, Constraints>> {
-        todo!("{members:?}")
+    fn read_config(path: &str) -> Result<Config> {
+        let s = fs::read_to_string(path)?;
+        let config = serde_yaml::from_str(&s)?;
+        Ok(config)
     }
 }
 

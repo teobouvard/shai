@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::time::Duration;
 
 use chrono::NaiveDate;
@@ -13,7 +14,7 @@ pub struct Shift {
     pub time_start: NaiveTime,
     pub time_end: NaiveTime,
 
-    pub days_nominal: Vec<Weekday>,
+    pub days_nominal: HashSet<Weekday>,
     pub days_include: Vec<NaiveDate>,
     pub days_exclude: Vec<NaiveDate>,
 

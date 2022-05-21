@@ -1,10 +1,7 @@
-use std::iter::Map;
-
 use anyhow::Result;
 use log::warn;
 
 use crate::io::reader::Reader;
-use crate::model::constraints::Constraints;
 use crate::model::person::Person;
 
 pub struct CsvReader {}
@@ -41,7 +38,7 @@ impl Reader for CsvReader {
         Ok(members)
     }
 
-    fn read_constraints(members: &[Person]) -> Result<Map<Person, Constraints>> {
-        todo!("{members:?}")
+    fn read_config(path: &str) -> Result<crate::model::config::Config> {
+        todo!("{path}")
     }
 }
