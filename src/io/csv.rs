@@ -1,11 +1,11 @@
-use anyhow::Result;
-use log::warn;
 use std::iter::Map;
 
-use crate::model::constraints::Constraints;
-use crate::model::person::Person;
+use anyhow::Result;
+use log::warn;
 
 use crate::io::reader::Reader;
+use crate::model::constraints::Constraints;
+use crate::model::person::Person;
 
 pub struct CsvReader {}
 
@@ -18,7 +18,7 @@ impl Reader for CsvReader {
         while let Some(result) = iter.next() {
             if let Ok(record) = result {
                 if let (Some(name), Some(surname), Some(email)) =
-                    (record.get(1), record.get(1), record.get(2))
+                    (record.get(0), record.get(1), record.get(2))
                 {
                     if name.trim().is_empty() | surname.trim().is_empty() | email.trim().is_empty()
                     {
@@ -41,8 +41,7 @@ impl Reader for CsvReader {
         Ok(members)
     }
 
-    fn read_constraints(members: Vec<Person>) -> Result<Map<Person, Constraints>> {
-        drop(members);
-        todo!()
+    fn read_constraints(members: &[Person]) -> Result<Map<Person, Constraints>> {
+        todo!("{members:?}")
     }
 }

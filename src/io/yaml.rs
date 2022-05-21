@@ -7,15 +7,11 @@ use crate::io::reader::Reader;
 use crate::io::writer::Writer;
 use crate::model::constraints::Constraints;
 use crate::model::person::Person;
-use crate::model::shift::Shift;
+
 pub struct YamlReader;
 pub struct YamlWriter;
 
 impl Reader for YamlReader {
-    fn read_shifts(path: &str) -> Result<Vec<Shift>> {
-        todo!("{path}")
-    }
-    
     fn read_members(path: &str) -> Result<Vec<Person>> {
         todo!("{path}")
     }
