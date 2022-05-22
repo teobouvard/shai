@@ -4,9 +4,24 @@ use super::config::Config;
 use crate::model::person::Person;
 use crate::model::shift::Shift;
 
+#[derive(Debug, Clone)]
+pub struct Allocation<'a> {
+    date: NaiveDate,
+    shifts: Vec<(&'a Shift, &'a Person)>,
+}
+
+impl<'a> Allocation<'a> {
+    pub fn new(date: NaiveDate, shift: &'a Shift, person: &'a Person) -> Self {
+        Allocation {
+            date,
+            shifts: vec![(shift, person)],
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct Dispatch<'a> {
-    pub allocations: Vec<(NaiveDate, Vec<(&'a Shift, &'a Person)>)>,
+    pub allocations: Vec<Allocation<'a>>,
 }
 
 impl<'a> Dispatch<'a> {
@@ -21,7 +36,7 @@ impl<'a> Dispatch<'a> {
             && self
                 .allocations
                 .iter()
-                .all(|daily| daily.1.len() == num_shifts)
+                .all(|day| day.shifts.len() == num_shifts)
     }
 
     pub fn successors(&self, config: &'a Config) -> Vec<Self> {
@@ -37,15 +52,26 @@ impl<'a> Dispatch<'a> {
     }
 
     fn add_to_next_shift(&mut self, person: &'a Person, config: &'a Config) {
-        let last_date = self.allocations.last();
-        match last_date {
-            Some(date) => {
-                todo!("{date:?}")
+        match self.allocations.last() {
+            Some(alloc) => {
+                if config.planning.shifts.len() == alloc.shifts.len() {
+                    self.allocations.push(Allocation::new(
+                        alloc.date.succ(),
+                        &config.planning.shifts[0],
+                        person,
+                    ))
+                } else {
+                    let next_shift = &config.planning.shifts[alloc.shifts.len()];
+                    if let Some(v) = self.allocations.last_mut() {
+                        v.shifts.push((next_shift, person))
+                    }
+                }
             }
             None => {
-                self.allocations.push((
+                self.allocations.push(Allocation::new(
                     config.planning.date_start,
-                    vec![(&config.planning.shifts[0], person)],
+                    &config.planning.shifts[0],
+                    person,
                 ));
             }
         }

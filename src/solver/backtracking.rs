@@ -17,8 +17,6 @@ impl Solver {
             let candidate = stack.pop();
             match candidate {
                 Some(candidate) => {
-                    dbg!(&candidate);
-
                     if candidate.is_complete(config) {
                         return Ok(candidate);
                     }
