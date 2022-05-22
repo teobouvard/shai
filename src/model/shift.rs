@@ -1,4 +1,6 @@
 use std::collections::HashSet;
+use std::hash::Hash;
+use std::hash::Hasher;
 use std::time::Duration;
 
 use chrono::Datelike;
@@ -39,3 +41,17 @@ impl Shift {
         self.datetime_start(day) + duration
     }
 }
+
+impl Hash for Shift {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
+    }
+}
+
+impl PartialEq for Shift {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+
+impl Eq for Shift {}
