@@ -18,7 +18,7 @@ fn extract_user_data() -> Result<()> {
 
 fn allocate_planning() -> Result<()> {
     let config = YamlReader::read_config("tmp/config.yaml")?;
-    let result = Solver::solve(&config);
+    let result = Solver::solve(&config)?;
     dbg!(&result);
     Ok(())
 }
