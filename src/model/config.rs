@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-
+use indexmap::IndexMap;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -9,6 +8,6 @@ use crate::model::planning::Planning;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
-    planning: Planning,
-    members: HashMap<Person, Constraints>,
+    pub planning: Planning,
+    pub members: IndexMap<Person, Constraints>,
 }

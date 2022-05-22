@@ -8,6 +8,9 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0"
 
+# HashMap with consistent order
+indexmap = { version = "1.8", features = ["serde"] }
+
 chrono = { version = "0.4", features = ["serde"] }
 csv = "1.1"
 
