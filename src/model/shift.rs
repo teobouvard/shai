@@ -36,9 +36,16 @@ impl Shift {
         day.and_time(self.time_start)
     }
 
+    pub fn duration(&self) -> chrono::Duration {
+        if self.time_end > self.time_start {
+            self.time_end - self.time_start
+        } else {
+            chrono::Duration::days(1) - (self.time_start - self.time_end)
+        }
+    }
+
     pub fn datetime_end(&self, day: &NaiveDate) -> NaiveDateTime {
-        let duration = self.time_end - self.time_start;
-        self.datetime_start(day) + duration
+        self.datetime_start(day) + self.duration()
     }
 }
 
@@ -55,3 +62,24 @@ impl PartialEq for Shift {
 }
 
 impl Eq for Shift {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn duration_midnight_wrap() {
+        let s = Shift {
+            name: String::new(),
+            time_start: NaiveTime::from_hms(18, 0, 0),
+            time_end: NaiveTime::from_hms(8, 0, 0),
+            days_nominal: HashSet::new(),
+            days_exclude: HashSet::new(),
+            days_include: HashSet::new(),
+            rest_needed: false,
+            rest_duration: Duration::from_secs(0),
+        };
+
+        assert_eq!(s.duration(), chrono::Duration::hours(14));
+    }
+}
