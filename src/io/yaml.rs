@@ -6,6 +6,7 @@ use anyhow::Result;
 use crate::io::reader::Reader;
 use crate::io::writer::Writer;
 use crate::model::config::Config;
+use crate::model::dispatch::Dispatch;
 use crate::model::person::Person;
 
 pub struct YamlReader;
@@ -30,7 +31,7 @@ impl Writer for YamlWriter {
         Ok(())
     }
 
-    fn write_planning(path: &str) {
-        todo!("{path}")
+    fn write_planning(path: &str, dispatch: &Dispatch) -> Result<()> {
+        todo!("{path} {dispatch:?}")
     }
 }

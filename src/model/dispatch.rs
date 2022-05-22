@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
 use chrono::NaiveDate;
+use chrono::NaiveDateTime;
+use log::debug;
 
 use crate::model::config::Config;
 use crate::model::constraints::Constraints;
@@ -9,14 +11,24 @@ use crate::model::shift::Shift;
 
 #[derive(Debug, Clone)]
 pub struct Allocation<'a> {
-    date: NaiveDate,
-    shift: &'a Shift,
-    person: Option<&'a Person>,
+    pub date: NaiveDate,
+    pub shift: &'a Shift,
+    pub person: Option<&'a Person>,
+}
+
+impl Allocation<'_> {
+    pub fn datetime_start(&self) -> NaiveDateTime {
+        self.shift.datetime_start(&self.date)
+    }
+
+    pub fn datetime_end(&self) -> NaiveDateTime {
+        self.shift.datetime_end(&self.date)
+    }
 }
 
 #[derive(Debug, Clone)]
 pub struct Dispatch<'a> {
-    config: &'a Config,
+    pub config: &'a Config,
     shift_load: HashMap<&'a Shift, usize>,
     pub allocations: Vec<Allocation<'a>>,
 }
@@ -106,28 +118,57 @@ impl<'a> Dispatch<'a> {
         person: &Person,
         constraints: &Constraints,
     ) -> bool {
-        let previous_person_allocations = self.previous_person_allocations(person);
+        debug!(
+            "Checking availability for '{}' '{}' '{}'",
+            date.to_string(),
+            &shift.name,
+            person.name
+        );
 
-        // Vacations
-        if constraints.vacations.contains(date) {
+        // Shift exclusions
+        if !self.can_assign_to_shift(shift, constraints) {
+            debug!("Shift not assignable");
             return false;
         }
 
-        // Rest duration
-        match previous_person_allocations.last() {
-            Some(alloc) => {
-                if alloc.shift.rest_needed {
-                    let next_shift_start = shift.datetime_start(date);
-                    let last_shift_end = alloc.shift.datetime_end(&alloc.date);
-                    let time_between_shifts = (next_shift_start - last_shift_end)
-                        .to_std()
-                        .expect("Invalid duration");
-                    if time_between_shifts < alloc.shift.rest_duration {
-                        return false;
-                    }
+        // Vacations
+        if constraints.vacations.contains(date) {
+            debug!("On vacation");
+            return false;
+        }
+
+        let previous_person_allocations = self.previous_person_allocations(person);
+        let shift_start = shift.datetime_start(date);
+        let shift_end = shift.datetime_end(date);
+
+        // Shift overlap + rest duration
+        for alloc in previous_person_allocations.clone() {
+            let range = alloc.datetime_start()..alloc.datetime_end();
+            if range.contains(&shift_start) || range.contains(&shift_end) {
+                debug!("Overlap with '{}'", alloc.shift.name);
+                return false;
+            }
+            if alloc.shift.rest_needed {
+                let last_shift_end = alloc.datetime_end();
+                let time_between_shifts = (shift_start - last_shift_end)
+                    .to_std()
+                    .expect("Invalid duration");
+                debug!(
+                    "Time since {} ({} -> {}) : {}",
+                    alloc.shift.name,
+                    last_shift_end,
+                    shift_start,
+                    time_between_shifts.as_secs()
+                );
+                if time_between_shifts < alloc.shift.rest_duration {
+                    debug!("Not enough rest '{}'", alloc.shift.name);
+                    return false;
                 }
             }
-            None => (),
+            debug!(
+                "Overlap and rest period compatible with {} {}",
+                alloc.date, alloc.shift.name
+            );
         }
 
         // Shift balancing
@@ -138,12 +179,14 @@ impl<'a> Dispatch<'a> {
 
         let num_expected_shifts = *self.shift_load.get(shift).unwrap_or(&0);
         if num_same_shifts > num_expected_shifts {
+            debug!("Shift imbalance");
             return false;
         }
 
         // TODO: Joined dates
         // TODO: Shift exclusions
 
+        debug!("Availability OK");
         true
     }
 
