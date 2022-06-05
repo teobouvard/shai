@@ -1,7 +1,11 @@
 use std::collections::HashMap;
+use std::ops::Range;
 
+use chrono::Datelike;
+use chrono::Duration;
 use chrono::NaiveDate;
 use chrono::NaiveDateTime;
+use chrono::Weekday;
 use log::debug;
 
 use crate::model::config::Config;
@@ -23,6 +27,10 @@ impl Allocation<'_> {
 
     pub fn datetime_end(&self) -> NaiveDateTime {
         self.shift.datetime_end(&self.date)
+    }
+
+    pub fn datetime_range(&self) -> Range<NaiveDateTime> {
+        self.datetime_start()..self.datetime_end()
     }
 }
 
@@ -143,7 +151,7 @@ impl<'a> Dispatch<'a> {
 
         // Shift overlap + rest duration
         for alloc in previous_person_allocations.clone() {
-            let range = alloc.datetime_start()..alloc.datetime_end();
+            let range = alloc.datetime_range();
             if range.contains(&shift_start) || range.contains(&shift_end) {
                 debug!("Overlap with '{}'", alloc.shift.name);
                 return false;
@@ -172,6 +180,7 @@ impl<'a> Dispatch<'a> {
         }
 
         // Shift balancing
+        // TODO[feature] balance on different time periods (week, month)
         let num_same_shifts = previous_person_allocations
             .iter()
             .filter(|alloc| alloc.shift.name == shift.name)
@@ -183,8 +192,21 @@ impl<'a> Dispatch<'a> {
             return false;
         }
 
-        // TODO: Joined dates
-        // TODO: Shift exclusions
+        // Joined dates
+        // TODO[feature] Join on configurable weekdays
+        let day_join_first = Weekday::Fri;
+        let day_join_second = Weekday::Sun;
+        if shift_start.weekday() == day_join_second
+            && !previous_person_allocations.iter().any(|alloc| {
+                alloc.date.weekday() == day_join_first
+                    && shift_start - alloc.datetime_start() < Duration::weeks(1)
+            })
+        {
+            debug!("No joined shifts");
+            return false;
+        }
+
+        // TODO[feature]: Shift exclusions
 
         debug!("Availability OK");
         true
