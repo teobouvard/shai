@@ -37,8 +37,9 @@ impl Allocation<'_> {
 #[derive(Debug, Clone)]
 pub struct Dispatch<'a> {
     pub config: &'a Config,
-    shift_load: HashMap<&'a Shift, usize>,
     pub allocations: Vec<Allocation<'a>>,
+    shift_load: HashMap<&'a Shift, usize>,
+    weekly_shift_load: usize,
 }
 
 impl<'a> Dispatch<'a> {
@@ -46,6 +47,7 @@ impl<'a> Dispatch<'a> {
         let mut obj = Dispatch {
             config,
             shift_load: HashMap::new(),
+            weekly_shift_load: 0,
             allocations: config
                 .planning
                 .date_start
@@ -86,6 +88,13 @@ impl<'a> Dispatch<'a> {
                 )
             })
             .collect();
+
+        let n_weeks = (config.planning.date_end - config.planning.date_start).num_weeks();
+        obj.weekly_shift_load = (config.planning.shifts.len() / n_weeks as usize) + 1;
+        // Prevent zero shift load -> no allocation possible
+        if obj.weekly_shift_load == 0 {
+            obj.weekly_shift_load = 1;
+        }
 
         obj
     }
@@ -189,6 +198,16 @@ impl<'a> Dispatch<'a> {
         let num_expected_shifts = *self.shift_load.get(shift).unwrap_or(&0);
         if num_same_shifts > num_expected_shifts {
             debug!("Shift imbalance");
+            return false;
+        }
+
+        // Shift load
+        let num_shifts_in_week = previous_person_allocations
+            .iter()
+            .filter(|alloc| (shift_start - alloc.datetime_start()) < Duration::weeks(1))
+            .count();
+        if num_shifts_in_week > self.weekly_shift_load {
+            debug!("Too many shifts in last week");
             return false;
         }
 
