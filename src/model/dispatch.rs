@@ -150,7 +150,7 @@ impl<'a> Dispatch<'a> {
         let shift_end = shift.datetime_end(date);
 
         // Shift overlap + rest duration
-        for alloc in previous_person_allocations.clone() {
+        for alloc in &previous_person_allocations {
             let range = alloc.datetime_range();
             if range.contains(&shift_start) || range.contains(&shift_end) {
                 debug!("Overlap with '{}'", alloc.shift.name);
